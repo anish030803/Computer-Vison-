@@ -89,31 +89,31 @@
 **Git tag:** `v0.3-models`
 
 ### 2.1 EfficientNet-B4
-- [ ] Implement `src/models/efficientnet.py`:
-  - [ ] Load pretrained EfficientNet-B4 from `timm`
-  - [ ] Custom classification head: GAP → BN → Dropout(0.4) → Dense(256, ReLU) → Dropout(0.3) → Dense(5, Softmax)
-  - [ ] Layer freezing/unfreezing utilities (freeze all, unfreeze top N%)
-  - [ ] Forward pass verified with dummy input
-- [ ] **VERIFY**: Model summary matches architecture spec, parameter counts correct
+- [x] Implement `src/models/efficientnet.py`:
+  - [x] Load pretrained EfficientNet-B4 from `timm`
+  - [x] Custom classification head: GAP → BN → Dropout(0.4) → Dense(256, ReLU) → Dropout(0.3) → Dense(5, Softmax)
+  - [x] Layer freezing/unfreezing utilities (freeze all, unfreeze top N%)
+  - [x] Forward pass verified with dummy input
+- [x] **VERIFY**: Model summary matches architecture spec, parameter counts correct
 
 ### 2.2 DINOv2
-- [ ] Implement `src/models/dinov2.py`:
-  - [ ] Load DINOv2 ViT-L/14 from torch.hub or timm
-  - [ ] Classification head: [CLS] → LayerNorm → Linear(1024→512, GELU) → Dropout(0.3) → Linear(512→5)
-  - [ ] Optional segmentation head using patch tokens
-  - [ ] Freezing utilities for staged unfreezing
-- [ ] **VERIFY**: Model loads, forward pass works, feature dimensions match spec
+- [x] Implement `src/models/dinov2.py`:
+  - [x] Load DINOv2 ViT-L/14 from torch.hub or timm
+  - [x] Classification head: [CLS] → LayerNorm → Linear(1024→512, GELU) → Dropout(0.3) → Linear(512→5)
+  - [x] Optional segmentation head using patch tokens
+  - [x] Freezing utilities for staged unfreezing
+- [x] **VERIFY**: Model loads, forward pass works, feature dimensions match spec
 
 ### 2.3 ResNet-50 Baseline
-- [ ] Implement `src/models/resnet_baseline.py`:
-  - [ ] Standard ResNet-50 with ImageNet weights
-  - [ ] Same classification head structure for fair comparison
-- [ ] **VERIFY**: Forward pass works, matches expected architecture
+- [x] Implement `src/models/resnet_baseline.py`:
+  - [x] Standard ResNet-50 with ImageNet weights
+  - [x] Same classification head structure for fair comparison
+- [x] **VERIFY**: Forward pass works, matches expected architecture
 
 ### 2.4 Shared Components
-- [ ] Implement `src/models/heads.py` — reusable classification/segmentation heads
-- [ ] Implement `src/models/ensemble.py` — weighted ensemble logic
-- [ ] **VERIFY**: All models produce shape (batch, 5) output, ensemble combines correctly
+- [x] Implement `src/models/heads.py` — reusable classification/segmentation heads
+- [x] Implement `src/models/ensemble.py` — weighted ensemble logic
+- [x] **VERIFY**: All models produce shape (batch, 5) output, ensemble combines correctly
 - [ ] **GIT PUSH** → Phase 2 complete
 
 ---
@@ -324,7 +324,7 @@ _This section is updated after each phase completion._
 |-------|--------|------|-------|
 | 0 — Scaffold | ✅ Complete | 2026-04-02 | All configs verified, directory structure matches TRD, utils tested |
 | 1 — Data Pipeline | ✅ Complete | 2026-04-02 | All 6 modules verified with synthetic data, cleaning loop + splits + augmentation + MixUp tested |
-| 2 — Models | ⬜ Pending | | |
+| 2 — Models | ✅ Complete | 2026-04-02 | EfficientNet-B4 (18M), ResNet-50 (24M), DINOv2, ensemble — all verified |
 | 3 — Training Pipeline | ⬜ Pending | | |
 | 4 — Full Training | ⬜ Pending | | |
 | 5 — Evaluation | ⬜ Pending | | |
