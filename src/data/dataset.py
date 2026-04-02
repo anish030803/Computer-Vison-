@@ -14,7 +14,7 @@ import cv2
 import numpy as np
 import pandas as pd
 import torch
-from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
 from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
 
 from src.utils.config import Config
@@ -156,6 +156,63 @@ def create_splits(
         logger.info("  %s distribution: %s", name, dist)
 
     return train_df, val_df, test_df
+
+
+def create_kfold_splits(
+    labels_path: str | Path,
+    n_folds: int = 5,
+    seed: int = 42,
+    test_ratio: float = 0.1,
+) -> tuple[list[tuple[pd.DataFrame, pd.DataFrame]], pd.DataFrame]:
+    """Create stratified k-fold cross-validation splits.
+
+    Holds out a fixed test set first, then creates k folds from the
+    remaining data. Each fold yields a (train_df, val_df) pair.
+
+    Args:
+        labels_path: Path to labels.csv (columns: image_id, label).
+        n_folds: Number of folds.
+        seed: Random seed.
+        test_ratio: Proportion held out as a fixed test set.
+
+    Returns:
+        Tuple of (folds, test_df) where folds is a list of
+        (train_df, val_df) tuples, one per fold.
+    """
+    df = pd.read_csv(labels_path)
+
+    # Hold out a fixed test set
+    splitter = StratifiedShuffleSplit(
+        n_splits=1, test_size=test_ratio, random_state=seed
+    )
+    trainval_idx, test_idx = next(splitter.split(df, df["label"]))
+
+    trainval_df = df.iloc[trainval_idx].reset_index(drop=True)
+    test_df = df.iloc[test_idx].reset_index(drop=True)
+
+    # K-fold on remaining data
+    skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=seed)
+    folds: list[tuple[pd.DataFrame, pd.DataFrame]] = []
+
+    for fold_idx, (train_idx, val_idx) in enumerate(
+        skf.split(trainval_df, trainval_df["label"])
+    ):
+        train_fold = trainval_df.iloc[train_idx].reset_index(drop=True)
+        val_fold = trainval_df.iloc[val_idx].reset_index(drop=True)
+        folds.append((train_fold, val_fold))
+
+        logger.info(
+            "Fold %d/%d: train=%d, val=%d",
+            fold_idx + 1, n_folds, len(train_fold), len(val_fold),
+        )
+        train_dist = train_fold["label"].value_counts().sort_index().to_dict()
+        val_dist = val_fold["label"].value_counts().sort_index().to_dict()
+        logger.info("  train dist: %s", train_dist)
+        logger.info("  val dist:   %s", val_dist)
+
+    logger.info("Test set: %d samples (held out)", len(test_df))
+
+    return folds, test_df
 
 
 def create_dataloaders(
