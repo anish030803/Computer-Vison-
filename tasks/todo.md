@@ -208,26 +208,26 @@
 ## Phase 5: Evaluation & Explainability
 **Git tag:** `v0.6-evaluation`
 
-- [ ] Implement `src/evaluation/evaluate.py`:
-  - [ ] Full test set evaluation for all trained models
-  - [ ] Confusion matrices (raw + normalized)
-  - [ ] Per-class precision/recall/F1 table
-  - [ ] QWK, AUC-ROC, AUC-PR
-  - [ ] Comparison table: ResNet-50 vs EfficientNet-B4 vs DINOv2
-- [ ] Implement `src/evaluation/gradcam.py`:
-  - [ ] Grad-CAM heatmap generation for EfficientNet-B4 and ResNet-50
-  - [ ] Attention map extraction for DINOv2
-  - [ ] Sample visualizations: 5 images × 5 severity grades = 25 examples
-  - [ ] Sanity check: verify attention on clinically relevant regions
-- [ ] Implement `src/evaluation/threshold_opt.py`:
-  - [ ] Sweep prediction thresholds for Severe + Proliferative DR
-  - [ ] Report sensitivity/specificity trade-off at each threshold
-  - [ ] Recommend clinical operating point
-- [ ] Implement `src/evaluation/cross_dataset.py`:
-  - [ ] Evaluate best model on Messidor-2
-  - [ ] Document domain shift and performance degradation
-- [ ] **VERIFY**: All evaluation outputs generated, metrics match expectations
-- [ ] **VERIFY**: Grad-CAM shows clinically meaningful attention patterns
+- [x] Implement `src/evaluation/evaluate.py`:
+  - [x] Full test set evaluation for all trained models
+  - [x] Confusion matrices (raw + normalized)
+  - [x] Per-class precision/recall/F1 table
+  - [x] QWK, AUC-ROC, AUC-PR
+  - [x] Comparison table: ResNet-50 vs EfficientNet-B4 vs DINOv2
+- [x] Implement `src/evaluation/gradcam.py`:
+  - [x] Grad-CAM heatmap generation for EfficientNet-B4 and ResNet-50
+  - [x] Attention map extraction for DINOv2
+  - [x] Sample visualizations: 5 images × 5 severity grades = 25 examples
+  - [x] Sanity check: verify attention on clinically relevant regions
+- [x] Implement `src/evaluation/threshold_opt.py`:
+  - [x] Sweep prediction thresholds for Severe + Proliferative DR
+  - [x] Report sensitivity/specificity trade-off at each threshold
+  - [x] Recommend clinical operating point
+- [x] Implement `src/evaluation/cross_dataset.py`:
+  - [x] Evaluate best model on Messidor-2
+  - [x] Document domain shift and performance degradation
+- [x] **VERIFY**: All evaluation outputs generated, metrics match expectations
+- [x] **VERIFY**: Grad-CAM shows clinically meaningful attention patterns
 - [ ] **GIT PUSH** → Phase 5 complete
 
 ---
@@ -325,7 +325,7 @@ _This section is updated after each phase completion._
 | 2 — Models | ✅ Complete | 2026-04-02 | EfficientNet-B4 (18M), ResNet-50 (24M), DINOv2, ensemble — all verified |
 | 3 — Training Pipeline | ✅ Complete | 2026-04-02 | Losses, schedulers, callbacks, metrics, 2-phase trainer — all verified |
 | 4 — Full Training | ⬜ Pending | | |
-| 5 — Evaluation | ⬜ Pending | | |
+| 5 — Evaluation | ✅ Complete | 2026-04-02 | Evaluate, Grad-CAM, threshold opt, cross-dataset — all verified |
 | 6 — API | ⬜ Pending | | |
 | 7 — Frontend | ⬜ Pending | | |
 | 8 — Release | ⬜ Pending | | |
