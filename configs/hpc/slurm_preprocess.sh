@@ -1,0 +1,26 @@
+#!/bin/bash
+#SBATCH --job-name=dr-preprocess
+#SBATCH --partition=cpu
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=64G
+#SBATCH --time=8:00:00
+#SBATCH --output=logs/slurm/preprocess_%j.out
+#SBATCH --error=logs/slurm/preprocess_%j.err
+#SBATCH --mail-type=END,FAIL
+
+# NOTE: Run `module avail` on your cluster to find exact module names
+module load python/3.11
+
+source venv/bin/activate
+mkdir -p logs/slurm
+
+echo "=== DR Data Preprocessing ==="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $SLURM_NODELIST"
+echo "Start: $(date)"
+echo "=============================="
+
+python scripts/run_cleaning.py --config configs/data_config.yaml
+
+echo "Exit code: $?"
+echo "End: $(date)"

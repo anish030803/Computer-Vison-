@@ -1,0 +1,131 @@
+# DINOv2 ViT-L/14 Training Configuration
+# DR Detection System — Self-supervised ViT with two-phase training
+
+# --- Model Architecture (TRD §4.2) ---
+model:
+  name: "dinov2_vit_l"
+  backbone: "dinov2_vitl14"            # Facebook DINOv2 ViT-L/14
+  pretrained: true
+  num_classes: 5
+  image_size: 518                      # DINOv2 native resolution (ViT-L/14, patch 14)
+  head:
+    type: "linear"
+    input_dim: 1024                    # ViT-L feature dimension
+    hidden_dim: 512
+    hidden_activation: "gelu"
+    use_layernorm: true
+    dropout: 0.3
+
+# --- Two-Phase Training (TRD §4.2) ---
+training:
+  # Phase 1: Linear probe — backbone fully frozen
+  phase1:
+    description: "Linear probe — backbone fully frozen"
+    freeze_backbone: true
+    epochs: 20
+    optimizer:
+      name: "adamw"
+      lr: 1.0e-3
+      weight_decay: 1.0e-4
+      betas: [0.9, 0.999]
+    scheduler:
+      name: "cosine_with_warmup"
+      warmup_epochs: 5
+      min_lr: 1.0e-6
+    loss:
+      name: "cross_entropy"
+      label_smoothing: 0.1
+      class_weights: null
+    batch_size: 32                     # Larger model + higher res = smaller batch
+
+  # Phase 2: Fine-tuning — last 6 transformer blocks unfrozen
+  phase2:
+    description: "Fine-tuning — last 6 transformer blocks unfrozen"
+    freeze_backbone: false
+    unfreeze_last_n_blocks: 6
+    epochs: 15
+    optimizer:
+      name: "adamw"
+      lr: 1.0e-5
+      weight_decay: 1.0e-4
+      betas: [0.9, 0.999]
+    scheduler:
+      name: "cosine_annealing_warm_restarts"
+      T_0: 5
+      T_mult: 2
+      min_lr: 1.0e-7
+    loss:
+      name: "cross_entropy"
+      label_smoothing: 0.1
+      class_weights: null
+      focal_loss_gamma: null
+    batch_size: 32
+    gradient_clipping:
+      max_norm: 1.0
+    mixup:
+      enabled: true
+      alpha: 0.2
+
+# --- Overfitting Prevention (TRD §5) ---
+regularization:
+  early_stopping:
+    monitor: "val_qwk"
+    patience: 5
+    mode: "max"
+  reduce_lr_on_plateau:
+    monitor: "val_qwk"
+    factor: 0.5
+    patience: 3
+    mode: "max"
+
+# --- Data Augmentation ---
+augmentation:
+  train:
+    horizontal_flip: true
+    vertical_flip: true
+    rotation_limit: 36
+    zoom_range: [0.9, 1.1]
+    brightness_limit: 0.1
+    contrast_limit: 0.1
+    normalize:
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
+  val:
+    normalize:
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
+
+# --- Hardware & Performance ---
+hardware:
+  device: "cuda"
+  mixed_precision: true
+  precision: "bf16"
+  num_workers: 16
+  pin_memory: true
+  prefetch_factor: 2
+
+# --- Monitoring ---
+monitoring:
+  tensorboard:
+    enabled: true
+    log_dir: "logs/tensorboard/dinov2_vit_l"
+  wandb:
+    enabled: false
+    project: "dr-detection"
+    entity: null
+  log_every_n_steps: 50
+
+# --- Checkpointing ---
+checkpointing:
+  save_dir: "checkpoints/dinov2_vit_l"
+  save_every_epoch: true
+  save_best_only: false
+  monitor: "val_qwk"
+  mode: "max"
+
+# --- Reproducibility ---
+seed: 42
+
+# --- Paths ---
+data_config: "configs/data_config.yaml"
+output_dir: "outputs/dinov2_vit_l"

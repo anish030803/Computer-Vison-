@@ -1,0 +1,129 @@
+# ResNet-50 Baseline Training Configuration
+# DR Detection System — Baseline for comparative evaluation
+
+# --- Model Architecture (TRD §4.3) ---
+model:
+  name: "resnet50"
+  backbone: "resnet50"                 # timm: ImageNet pretrained
+  pretrained: true
+  num_classes: 5
+  image_size: 380
+  head:
+    pool: "avg"
+    use_batchnorm: true
+    hidden_dim: 256
+    hidden_activation: "relu"
+    dropout_post_pool: 0.4
+    dropout_post_hidden: 0.3
+
+# --- Two-Phase Training ---
+training:
+  phase1:
+    description: "Head warmup — backbone frozen"
+    freeze_backbone: true
+    epochs: 20
+    optimizer:
+      name: "adamw"
+      lr: 1.0e-3
+      weight_decay: 1.0e-4
+      betas: [0.9, 0.999]
+    scheduler:
+      name: "cosine_with_warmup"
+      warmup_epochs: 5
+      min_lr: 1.0e-6
+    loss:
+      name: "cross_entropy"
+      label_smoothing: 0.1
+      class_weights: null
+    batch_size: 128                    # Lighter model = bigger batch
+
+  phase2:
+    description: "Fine-tuning — top 30% backbone unfrozen"
+    freeze_backbone: false
+    unfreeze_ratio: 0.3
+    epochs: 15
+    optimizer:
+      name: "adamw"
+      lr: 1.0e-5
+      weight_decay: 1.0e-4
+      betas: [0.9, 0.999]
+    scheduler:
+      name: "cosine_annealing_warm_restarts"
+      T_0: 5
+      T_mult: 2
+      min_lr: 1.0e-7
+    loss:
+      name: "cross_entropy"
+      label_smoothing: 0.1
+      class_weights: null
+      focal_loss_gamma: null
+    batch_size: 128
+    gradient_clipping:
+      max_norm: 1.0
+    mixup:
+      enabled: true
+      alpha: 0.2
+
+# --- Overfitting Prevention (TRD §5) ---
+regularization:
+  early_stopping:
+    monitor: "val_qwk"
+    patience: 5
+    mode: "max"
+  reduce_lr_on_plateau:
+    monitor: "val_qwk"
+    factor: 0.5
+    patience: 3
+    mode: "max"
+
+# --- Data Augmentation ---
+augmentation:
+  train:
+    horizontal_flip: true
+    vertical_flip: true
+    rotation_limit: 36
+    zoom_range: [0.9, 1.1]
+    brightness_limit: 0.1
+    contrast_limit: 0.1
+    normalize:
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
+  val:
+    normalize:
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
+
+# --- Hardware & Performance ---
+hardware:
+  device: "cuda"
+  mixed_precision: true
+  precision: "bf16"
+  num_workers: 16
+  pin_memory: true
+  prefetch_factor: 2
+
+# --- Monitoring ---
+monitoring:
+  tensorboard:
+    enabled: true
+    log_dir: "logs/tensorboard/resnet50"
+  wandb:
+    enabled: false
+    project: "dr-detection"
+    entity: null
+  log_every_n_steps: 50
+
+# --- Checkpointing ---
+checkpointing:
+  save_dir: "checkpoints/resnet50"
+  save_every_epoch: true
+  save_best_only: false
+  monitor: "val_qwk"
+  mode: "max"
+
+# --- Reproducibility ---
+seed: 42
+
+# --- Paths ---
+data_config: "configs/data_config.yaml"
+output_dir: "outputs/resnet50"

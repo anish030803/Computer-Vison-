@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Data & model artifacts (large files)
+data/
+checkpoints/
+outputs/
+logs/
+*.npy
+*.h5
+*.hdf5
+*.ckpt
+*.pt
+*.pth
+*.onnx
+
+# Secrets & credentials
+.env
+.env.*
+
+# Weights & Biases
+wandb/
+
+# TensorBoard
+runs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Node / Frontend
+node_modules/
+.next/
+bun.lockb
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo

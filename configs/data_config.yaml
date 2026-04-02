@@ -1,0 +1,128 @@
+# Data Pipeline Configuration
+# DR Detection System — Dataset definitions, cleaning thresholds, preprocessing
+
+# --- Datasets ---
+datasets:
+  aptos2019:
+    name: "APTOS 2019 Blindness Detection"
+    source: "kaggle"
+    kaggle_dataset: "mariaherrerot/aptos2019"
+    priority: "P0"
+    num_images_train: 3662
+    num_images_test: 1928  # No labels available — do not use for evaluation
+    num_classes: 5
+    local_path: "data/raw/aptos2019"
+
+  eyepacs:
+    name: "EyePACS"
+    source: "kaggle"
+    kaggle_dataset: "tanlikesmath/diabetic-retinopathy-resized"
+    priority: "P1"
+    num_images: 88000
+    num_classes: 5
+    local_path: "data/raw/eyepacs"
+
+  messidor2:
+    name: "Messidor-2"
+    source: "url"
+    url: "https://www.adcis.net/en/third-party/messidor2/"
+    priority: "P1"
+    num_images: 1748
+    num_classes: 4
+    use_for: "cross_dataset_validation"
+    local_path: "data/raw/messidor2"
+
+  idrid:
+    name: "IDRiD"
+    source: "ieee_dataport"
+    priority: "P2"
+    num_images: 516
+    has_lesion_masks: true
+    use_for: "segmentation"
+    local_path: "data/raw/idrid"
+
+  ddr:
+    name: "DDR"
+    source: "academic"
+    priority: "P2"
+    num_images: 13673
+    num_classes: 6
+    local_path: "data/raw/ddr"
+
+# --- Data Paths ---
+paths:
+  raw_data: "data/raw"
+  cleaned_data: "data/cleaned"
+  preprocessed_data: "data/preprocessed"
+  cache_dir: "data/cache"
+  reports_dir: "data/reports"
+
+# --- Cleaning Thresholds (TRD §3.2) ---
+cleaning:
+  file_integrity:
+    enabled: true
+
+  duplicate_detection:
+    enabled: true
+    hash_algorithm: "phash"
+    hamming_threshold: 5
+
+  quality_assessment:
+    enabled: true
+    min_sharpness: 100.0        # Laplacian variance
+    min_brightness: 30           # Mean pixel value (0-255)
+    max_brightness: 225
+    min_contrast: 20             # Std deviation of pixel values
+
+  resolution:
+    min_width: 256
+    min_height: 256
+    allowed_formats: ["png", "jpg", "jpeg", "tif", "tiff"]
+
+  label_verification:
+    enabled: true
+    require_all_labeled: true
+
+# --- Preprocessing (TRD §3.3 — Ben Graham's method) ---
+preprocessing:
+  ben_graham:
+    enabled: true
+    gaussian_sigma_ratio: 0.1    # sigma = 10% of image width
+    add_back_value: 128
+
+  clahe:
+    enabled: false
+    clip_limit: 2.0
+    tile_grid_size: [8, 8]
+
+  green_channel_extraction:
+    enabled: false
+
+  normalize_to_01: true
+
+# --- Target Image Sizes (per model) ---
+image_sizes:
+  efficientnet_b4: 380
+  dinov2_vit_l: 518
+  resnet50: 380
+
+# --- Train/Val/Test Splits (PRD FR-07) ---
+splits:
+  train: 0.8
+  val: 0.1
+  test: 0.1
+  stratified: true
+  random_seed: 42
+
+# --- Class Info ---
+classes:
+  num_classes: 5
+  names:
+    - "No DR"
+    - "Mild NPDR"
+    - "Moderate NPDR"
+    - "Severe NPDR"
+    - "Proliferative DR"
+  # Computed dynamically after cleaning — never hardcode
+  class_weights: null
+  class_distribution: null
