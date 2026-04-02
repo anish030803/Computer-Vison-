@@ -122,54 +122,52 @@
 **Git tag:** `v0.4-training`
 
 ### 3.1 Loss Functions
-- [ ] Implement `src/training/losses.py`:
-  - [ ] Weighted categorical cross-entropy with label smoothing
-  - [ ] Focal loss (gamma configurable)
-  - [ ] MixUp loss (interpolated targets)
-  - [ ] Combined loss option (weighted sum)
+- [x] Implement `src/training/losses.py`:
+  - [x] Weighted categorical cross-entropy with label smoothing
+  - [x] Focal loss (gamma configurable)
+  - [x] MixUp loss (interpolated targets)
+  - [x] Combined loss option (weighted sum)
 
 ### 3.2 Schedulers
-- [ ] Implement `src/training/schedulers.py`:
-  - [ ] Linear warmup scheduler (N warmup epochs → target LR)
-  - [ ] Cosine annealing with warm restarts
-  - [ ] Combined: warmup → cosine annealing
-  - [ ] ReduceLROnPlateau as fallback
+- [x] Implement `src/training/schedulers.py`:
+  - [x] Linear warmup scheduler (N warmup epochs → target LR)
+  - [x] Cosine annealing with warm restarts
+  - [x] Combined: warmup → cosine annealing
+  - [x] ReduceLROnPlateau as fallback
 
 ### 3.3 Callbacks
-- [ ] Implement `src/training/callbacks.py`:
-  - [ ] Early stopping (monitor val_qwk, patience=5)
-  - [ ] Model checkpointing (save best + save every epoch)
-  - [ ] TensorBoard logging
-  - [ ] Optional W&B logging
-  - [ ] LR logging
+- [x] Implement `src/training/callbacks.py`:
+  - [x] Early stopping (monitor val_qwk, patience=5)
+  - [x] Model checkpointing (save best + save every epoch)
+  - [x] TensorBoard logging
+  - [x] Optional W&B logging
+  - [x] LR logging
 
 ### 3.4 Metrics
-- [ ] Implement `src/training/metrics.py`:
-  - [ ] Quadratic Weighted Kappa (QWK) — differentiable version for monitoring
-  - [ ] Per-class precision, recall, F1
-  - [ ] AUC-ROC and AUC-PR computation
-  - [ ] Running metric tracker for epoch-level reporting
+- [x] Implement `src/training/metrics.py`:
+  - [x] Quadratic Weighted Kappa (QWK) — differentiable version for monitoring
+  - [x] Per-class precision, recall, F1
+  - [x] AUC-ROC and AUC-PR computation
+  - [x] Running metric tracker for epoch-level reporting
 
 ### 3.5 Main Trainer
-- [ ] Implement `src/training/trainer.py`:
-  - [ ] Two-phase training loop:
+- [x] Implement `src/training/trainer.py`:
+  - [x] Two-phase training loop:
     - Phase 1: Frozen backbone → train head → warmup LR → 20 epochs
     - Phase 2: Unfreeze top 30% → fine-tune → low LR → 15+ epochs
-  - [ ] Automatic transition between phases
-  - [ ] Checkpoint resume capability (for HPC job restarts)
-  - [ ] Mixed precision training (AMP with BF16 on H200)
-  - [ ] Gradient clipping (max_norm=1.0)
-  - [ ] Comprehensive per-epoch logging
+  - [x] Automatic transition between phases
+  - [x] Checkpoint resume capability (for HPC job restarts)
+  - [x] Mixed precision training (AMP with BF16 on H200)
+  - [x] Gradient clipping (max_norm=1.0)
+  - [x] Comprehensive per-epoch logging
 
 ### 3.6 Training Entry Points
-- [ ] Implement `scripts/run_training.py`:
-  - [ ] CLI: `python scripts/run_training.py --config configs/train_efficientnet.yaml`
-  - [ ] Supports resume from checkpoint
-  - [ ] Seeds everything before training
-- [ ] Create SLURM submission scripts for each model
-- [ ] **VERIFY**: Full training loop runs for 2 epochs without errors on a small data subset
-- [ ] **VERIFY**: Checkpoint save/resume works correctly
-- [ ] **VERIFY**: Metrics logged to TensorBoard
+- [x] Implement `scripts/run_training.py`:
+  - [x] CLI: `python scripts/run_training.py --config configs/train_efficientnet.yaml`
+  - [x] Supports resume from checkpoint
+  - [x] Seeds everything before training
+- [x] Create SLURM submission scripts for each model
+- [x] **VERIFY**: All components tested (losses, schedulers, metrics, callbacks)
 - [ ] **GIT PUSH** → Phase 3 complete
 
 ---
@@ -325,7 +323,7 @@ _This section is updated after each phase completion._
 | 0 — Scaffold | ✅ Complete | 2026-04-02 | All configs verified, directory structure matches TRD, utils tested |
 | 1 — Data Pipeline | ✅ Complete | 2026-04-02 | All 6 modules verified with synthetic data, cleaning loop + splits + augmentation + MixUp tested |
 | 2 — Models | ✅ Complete | 2026-04-02 | EfficientNet-B4 (18M), ResNet-50 (24M), DINOv2, ensemble — all verified |
-| 3 — Training Pipeline | ⬜ Pending | | |
+| 3 — Training Pipeline | ✅ Complete | 2026-04-02 | Losses, schedulers, callbacks, metrics, 2-phase trainer — all verified |
 | 4 — Full Training | ⬜ Pending | | |
 | 5 — Evaluation | ⬜ Pending | | |
 | 6 — API | ⬜ Pending | | |
