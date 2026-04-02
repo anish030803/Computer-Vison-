@@ -8,8 +8,8 @@
 #SBATCH --error=logs/slurm/preprocess_%j.err
 #SBATCH --mail-type=END,FAIL
 
-# NOTE: Run `module avail` on your cluster to find exact module names
-module load python/3.11
+# Northeastern Explorer cluster modules
+module load python/3.13.5
 
 source venv/bin/activate
 mkdir -p logs/slurm
