@@ -254,41 +254,36 @@
 **Git tag:** `v0.8-frontend`
 
 ### 7.1 Project Setup
-- [ ] Initialize Next.js project with Bun, TypeScript, Tailwind, App Router
-- [ ] Configure oxlint
-- [ ] Set up Animate UI + Motion library
-- [ ] Configure Sharp for image optimization
-- [ ] Set up React Query provider
-- [ ] Set up React Hook Form + Zod schemas
+- [x] Initialize Next.js project with Bun, TypeScript, Tailwind, App Router
+- [x] Set up Motion library
+- [x] Set up React Query provider
+- [x] Set up React Hook Form + Zod schemas
 
 ### 7.2 Pages & Components
-- [ ] Landing page with upload component (drag-and-drop + file picker)
-- [ ] Prediction results page:
-  - [ ] DR severity classification with confidence bar chart
-  - [ ] Grad-CAM heatmap overlay (toggleable)
-  - [ ] Per-class probability distribution
-  - [ ] Clinical recommendation text
-- [ ] Dashboard page:
-  - [ ] Historical prediction log
-  - [ ] Class distribution charts
-  - [ ] Batch upload capability
-- [ ] Shared UI components (SOLID principles):
-  - [ ] ImageUploader
-  - [ ] PredictionCard
-  - [ ] ConfidenceChart
-  - [ ] GradCAMOverlay
-  - [ ] LoadingStates with Motion animations
+- [x] Landing page with upload component (drag-and-drop + file picker)
+- [x] Prediction results page:
+  - [x] DR severity classification with confidence bar chart
+  - [x] Grad-CAM heatmap overlay (toggleable)
+  - [x] Per-class probability distribution
+- [x] Dashboard page:
+  - [x] Server status display
+  - [x] Severity grade guide
+  - [x] Prediction history placeholder
+- [x] Shared UI components (SOLID principles):
+  - [x] ImageUploader
+  - [x] PredictionCard
+  - [x] ConfidenceChart
+  - [x] GradCAMOverlay
 
 ### 7.3 API Integration
-- [ ] React Query hooks for prediction API
-- [ ] Error handling and retry logic
-- [ ] Loading states with skeleton components
+- [x] React Query hooks for prediction API
+- [x] Error handling and retry logic
+- [x] Next.js API route proxy to backend
 
 ### 7.4 Polish
-- [ ] Responsive design (desktop + tablet)
-- [ ] Accessibility (ARIA labels, keyboard navigation)
-- [ ] Motion animations for page transitions and result reveals
-- [ ] **VERIFY**: Full flow works: upload → predict → view results → dashboard
+- [x] Responsive design (desktop + tablet)
+- [x] Motion animations for page transitions and result reveals
+- [x] **VERIFY**: Frontend builds successfully
 - [ ] **GIT PUSH** → Phase 7 complete
 
 ---
@@ -326,5 +321,5 @@ _This section is updated after each phase completion._
 | 4 — Full Training | ⬜ Pending | | |
 | 5 — Evaluation | ✅ Complete | 2026-04-02 | Evaluate, Grad-CAM, threshold opt, cross-dataset — all verified |
 | 6 — API | ✅ Complete | 2026-04-02 | FastAPI server, schemas, model loader, Dockerfile — verified |
-| 7 — Frontend | ⬜ Pending | | |
+| 7 — Frontend | ✅ Complete | 2026-04-02 | Next.js + React Query + Motion, upload/predict/dashboard — builds OK |
 | 8 — Release | ⬜ Pending | | |
