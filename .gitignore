@@ -14,10 +14,10 @@ venv/
 env/
 
 # Data & model artifacts (large files)
-data/
-checkpoints/
-outputs/
-logs/
+/data/
+/checkpoints/
+/outputs/
+/logs/
 *.npy
 *.h5
 *.hdf5
