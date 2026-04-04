@@ -65,14 +65,14 @@ cleaning:
   duplicate_detection:
     enabled: true
     hash_algorithm: "phash"
-    hamming_threshold: 5
+    hamming_threshold: 3              # Stricter: only remove very close duplicates
 
   quality_assessment:
     enabled: true
-    min_sharpness: 100.0        # Laplacian variance
-    min_brightness: 30           # Mean pixel value (0-255)
-    max_brightness: 225
-    min_contrast: 20             # Std deviation of pixel values
+    min_sharpness: 5.0           # Laplacian variance — fundus images are naturally soft
+    min_brightness: 5            # Mean pixel value — fundus images have dark backgrounds
+    max_brightness: 245
+    min_contrast: 5              # Std deviation — low threshold for dark-background images
 
   resolution:
     min_width: 256
