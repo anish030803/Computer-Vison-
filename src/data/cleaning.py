@@ -6,12 +6,16 @@ Runs 5 passes until all gates pass:
 3. Quality assessment (sharpness, brightness, contrast)
 4. Resolution & format normalization
 5. Label verification
+
+Rejected files are moved to a quarantine directory, not deleted.
+The original labels.csv is backed up before any modifications.
 """
 
 from __future__ import annotations
 
 import json
 import logging
+import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -64,12 +68,21 @@ class CleaningReport:
         logger.info("Cleaning report saved to %s", path)
 
 
+def _quarantine(img_path: Path, quarantine_dir: Path) -> None:
+    """Move a rejected file to the quarantine directory."""
+    dest = quarantine_dir / img_path.name
+    shutil.move(str(img_path), str(dest))
+
+
 def run_cleaning_loop(
     dataset_path: str | Path,
     config: Config,
     max_iterations: int = 5,
 ) -> CleaningReport:
     """Run the iterative cleaning loop until all quality gates pass.
+
+    Rejected images are moved to dataset_path/quarantine/ (not deleted).
+    labels.csv is backed up as labels.csv.bak before any modification.
 
     Args:
         dataset_path: Path to dataset (must contain images/ and labels.csv).
@@ -82,10 +95,19 @@ def run_cleaning_loop(
     dataset_path = Path(dataset_path)
     images_dir = dataset_path / "images"
     labels_path = dataset_path / "labels.csv"
+    quarantine_dir = dataset_path / "quarantine"
+    quarantine_dir.mkdir(exist_ok=True)
     cleaning_cfg = config.cleaning
 
     if not images_dir.exists():
         raise FileNotFoundError(f"Images directory not found: {images_dir}")
+
+    # Backup labels before any modification
+    if labels_path.exists():
+        backup = dataset_path / "labels.csv.bak"
+        if not backup.exists():
+            shutil.copy2(labels_path, backup)
+            logger.info("Backed up labels to %s", backup)
 
     report = CleaningReport()
 
@@ -95,7 +117,7 @@ def run_cleaning_loop(
         all_gates_passed = True
 
         # Pass 1: File integrity
-        p1_result = _pass_file_integrity(images_dir, report)
+        p1_result = _pass_file_integrity(images_dir, quarantine_dir, report)
         pass_results["file_integrity"] = p1_result
         if not p1_result["gate_passed"]:
             all_gates_passed = False
@@ -104,6 +126,7 @@ def run_cleaning_loop(
         if cleaning_cfg.duplicate_detection.enabled:
             p2_result = _pass_duplicate_detection(
                 images_dir,
+                quarantine_dir,
                 cleaning_cfg.duplicate_detection.hamming_threshold,
                 report,
             )
@@ -115,6 +138,7 @@ def run_cleaning_loop(
         if cleaning_cfg.quality_assessment.enabled:
             p3_result = _pass_quality_assessment(
                 images_dir,
+                quarantine_dir,
                 cleaning_cfg.quality_assessment,
                 report,
             )
@@ -125,6 +149,7 @@ def run_cleaning_loop(
         # Pass 4: Resolution & format
         p4_result = _pass_resolution_format(
             images_dir,
+            quarantine_dir,
             cleaning_cfg.resolution,
             report,
         )
@@ -132,7 +157,7 @@ def run_cleaning_loop(
         if not p4_result["gate_passed"]:
             all_gates_passed = False
 
-        # Pass 5: Label verification
+        # Pass 5: Label verification — sync labels.csv to match surviving images
         if cleaning_cfg.label_verification.enabled and labels_path.exists():
             p5_result = _pass_label_verification(images_dir, labels_path, report)
             pass_results["label_verification"] = p5_result
@@ -140,7 +165,7 @@ def run_cleaning_loop(
                 all_gates_passed = False
 
         # Count remaining images
-        remaining = len(list(images_dir.glob("*")))
+        remaining = len([f for f in images_dir.iterdir() if f.is_file()])
         pass_results["images_remaining"] = remaining
         report.add_iteration(iteration, pass_results)
 
@@ -164,8 +189,8 @@ def run_cleaning_loop(
     return report
 
 
-def _pass_file_integrity(images_dir: Path, report: CleaningReport) -> dict:
-    """Pass 1: Remove corrupt or truncated images."""
+def _pass_file_integrity(images_dir: Path, quarantine_dir: Path, report: CleaningReport) -> dict:
+    """Pass 1: Quarantine corrupt or truncated images."""
     corrupt_count = 0
     checked = 0
 
@@ -177,13 +202,12 @@ def _pass_file_integrity(images_dir: Path, report: CleaningReport) -> dict:
         try:
             img = Image.open(img_path)
             img.verify()
-            # Re-open after verify (verify closes the file)
             img = Image.open(img_path)
             img.load()
         except Exception as e:
             logger.debug("Corrupt image: %s (%s)", img_path.name, e)
             report.add_removed(str(img_path), f"corrupt: {e}", "file_integrity")
-            img_path.unlink()
+            _quarantine(img_path, quarantine_dir)
             corrupt_count += 1
 
     logger.info("File integrity: checked=%d, corrupt=%d", checked, corrupt_count)
@@ -196,48 +220,42 @@ def _pass_file_integrity(images_dir: Path, report: CleaningReport) -> dict:
 
 def _pass_duplicate_detection(
     images_dir: Path,
+    quarantine_dir: Path,
     hamming_threshold: int,
     report: CleaningReport,
 ) -> dict:
-    """Pass 2: Remove near-duplicate images using perceptual hashing."""
+    """Pass 2: Quarantine near-duplicate images using perceptual hashing."""
     hashes: dict[str, tuple[imagehash.ImageHash, Path]] = {}
     duplicates_removed = 0
 
-    image_files = sorted(images_dir.iterdir())
+    image_files = sorted(f for f in images_dir.iterdir() if f.is_file())
 
     for img_path in image_files:
-        if not img_path.is_file():
-            continue
-
         try:
             img = Image.open(img_path)
             phash = imagehash.phash(img)
         except Exception:
             continue
 
-        # Check against existing hashes
         is_duplicate = False
-        for existing_key, (existing_hash, existing_path) in hashes.items():
+        for existing_key, (existing_hash, existing_path) in list(hashes.items()):
             distance = phash - existing_hash
             if distance < hamming_threshold:
-                # Keep the larger (presumably higher quality) file
                 if img_path.stat().st_size >= existing_path.stat().st_size:
-                    # Remove existing, keep current
                     report.add_removed(
                         str(existing_path),
                         f"duplicate of {img_path.name} (hamming={distance})",
                         "duplicate_detection",
                     )
-                    existing_path.unlink()
+                    _quarantine(existing_path, quarantine_dir)
                     hashes[existing_key] = (phash, img_path)
                 else:
-                    # Remove current, keep existing
                     report.add_removed(
                         str(img_path),
                         f"duplicate of {existing_path.name} (hamming={distance})",
                         "duplicate_detection",
                     )
-                    img_path.unlink()
+                    _quarantine(img_path, quarantine_dir)
                 duplicates_removed += 1
                 is_duplicate = True
                 break
@@ -254,10 +272,11 @@ def _pass_duplicate_detection(
 
 def _pass_quality_assessment(
     images_dir: Path,
+    quarantine_dir: Path,
     quality_cfg: Config,
     report: CleaningReport,
 ) -> dict:
-    """Pass 3: Remove images below quality thresholds."""
+    """Pass 3: Quarantine images below quality thresholds."""
     removed = 0
     checked = 0
     quality_scores: list[float] = []
@@ -279,14 +298,10 @@ def _pass_quality_assessment(
 
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-            # Sharpness via Laplacian variance
             sharpness = cv2.Laplacian(gray, cv2.CV_64F).var()
             quality_scores.append(sharpness)
 
-            # Brightness (mean pixel value)
             brightness = gray.mean()
-
-            # Contrast (std deviation)
             contrast = gray.std()
 
             reasons = []
@@ -301,7 +316,7 @@ def _pass_quality_assessment(
 
             if reasons:
                 report.add_removed(str(img_path), "; ".join(reasons), "quality_assessment")
-                img_path.unlink()
+                _quarantine(img_path, quarantine_dir)
                 removed += 1
 
         except Exception as e:
@@ -318,10 +333,11 @@ def _pass_quality_assessment(
 
 def _pass_resolution_format(
     images_dir: Path,
+    quarantine_dir: Path,
     resolution_cfg: Config,
     report: CleaningReport,
 ) -> dict:
-    """Pass 4: Remove images below minimum resolution, normalize formats."""
+    """Pass 4: Quarantine images below minimum resolution."""
     removed = 0
     checked = 0
     min_w = resolution_cfg.min_width
@@ -335,14 +351,12 @@ def _pass_resolution_format(
 
         ext = img_path.suffix.lower().lstrip(".")
 
-        # Check format
         if ext not in allowed:
             report.add_removed(str(img_path), f"unsupported format: {ext}", "resolution_format")
-            img_path.unlink()
+            _quarantine(img_path, quarantine_dir)
             removed += 1
             continue
 
-        # Check resolution
         try:
             img = Image.open(img_path)
             w, h = img.size
@@ -353,7 +367,7 @@ def _pass_resolution_format(
                     f"resolution {w}x{h} below minimum {min_w}x{min_h}",
                     "resolution_format",
                 )
-                img_path.unlink()
+                _quarantine(img_path, quarantine_dir)
                 removed += 1
         except Exception as e:
             logger.debug("Resolution check failed for %s: %s", img_path.name, e)
@@ -371,40 +385,39 @@ def _pass_label_verification(
     labels_path: Path,
     report: CleaningReport,
 ) -> dict:
-    """Pass 5: Verify all images have labels and vice versa."""
+    """Pass 5: Sync labels.csv with surviving images.
+
+    Does NOT delete unlabeled images — only trims orphan labels from CSV.
+    Unlabeled images are logged as warnings but kept (they may have been
+    mislabeled in the source CSV).
+    """
     df = pd.read_csv(labels_path)
     labeled_ids = set(df["image_id"].astype(str))
 
-    # Get image IDs (filename without extension)
     image_ids = {f.stem for f in images_dir.iterdir() if f.is_file()}
 
-    # Images without labels
     unlabeled = image_ids - labeled_ids
-    # Labels without images (orphan labels)
     orphan_labels = labeled_ids - image_ids
 
-    removed = 0
-    for img_id in unlabeled:
-        # Find and remove the image file
-        for img_path in images_dir.glob(f"{img_id}.*"):
-            report.add_removed(str(img_path), "no label found", "label_verification")
-            img_path.unlink()
-            removed += 1
+    if unlabeled:
+        logger.warning(
+            "%d images have no labels — keeping them but they won't be used for training",
+            len(unlabeled),
+        )
 
-    # Clean orphan labels from CSV
+    # Only remove orphan labels (labels with no matching image)
     if orphan_labels:
         df = df[~df["image_id"].astype(str).isin(orphan_labels)]
         df.to_csv(labels_path, index=False)
         logger.info("Removed %d orphan labels from CSV", len(orphan_labels))
 
-    # Log class distribution
     if not df.empty and "label" in df.columns:
         dist = df["label"].value_counts().sort_index().to_dict()
-        logger.info("Class distribution after label verification: %s", dist)
+        logger.info("Class distribution: %s", dist)
 
     logger.info("Label verification: unlabeled=%d, orphan=%d", len(unlabeled), len(orphan_labels))
     return {
-        "unlabeled_images_removed": len(unlabeled),
+        "unlabeled_images": len(unlabeled),
         "orphan_labels_removed": len(orphan_labels),
-        "gate_passed": len(unlabeled) == 0 and len(orphan_labels) == 0,
+        "gate_passed": len(orphan_labels) == 0,
     }
