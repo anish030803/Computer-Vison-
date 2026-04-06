@@ -302,9 +302,9 @@ class Trainer:
 
             # Track metrics
             with torch.no_grad():
-                probs = F.softmax(output, dim=-1).cpu().numpy()
+                probs = F.softmax(output.float(), dim=-1).cpu().numpy()
                 preds = output.argmax(dim=-1).cpu().numpy()
-                true_labels = labels.cpu().numpy() if not use_mixup else labels.cpu().numpy()
+                true_labels = labels.cpu().numpy()
                 running.update(preds, true_labels, probs, loss.item())
 
         return running.compute()
@@ -325,7 +325,7 @@ class Trainer:
                     output = output["logits"]
                 loss = criterion(output, labels)
 
-            probs = F.softmax(output, dim=-1).cpu().numpy()
+            probs = F.softmax(output.float(), dim=-1).cpu().numpy()
             preds = output.argmax(dim=-1).cpu().numpy()
             running.update(preds, labels.cpu().numpy(), probs, loss.item())
 
