@@ -108,20 +108,17 @@ class CrossValidationTrainer:
                 val_df, val_transform, batch_size, num_workers, shuffle=False
             )
 
-            # Override checkpoint dir for this fold
+            # Override checkpoint dir for this fold — save only best to conserve disk
             fold_config = copy.deepcopy(self.config)
             fold_config._data["checkpointing"] = {
                 "save_dir": str(fold_dir / "checkpoints"),
-                "save_every_epoch": True,
-                "save_best_only": False,
+                "save_every_epoch": False,
+                "save_best_only": True,
                 "monitor": "val_qwk",
                 "mode": "max",
             }
             fold_config._data["monitoring"] = {
-                "tensorboard": {
-                    "enabled": True,
-                    "log_dir": str(fold_dir / "tensorboard"),
-                },
+                "tensorboard": {"enabled": False},
                 "wandb": {"enabled": False},
                 "log_every_n_steps": 50,
             }
