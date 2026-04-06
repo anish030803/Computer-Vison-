@@ -25,11 +25,14 @@ class WeightedCrossEntropyLoss(nn.Module):
         label_smoothing: float = 0.0,
     ) -> None:
         super().__init__()
-        weight = torch.tensor(class_weights, dtype=torch.float32) if class_weights else None
-        self.ce = nn.CrossEntropyLoss(weight=weight, label_smoothing=label_smoothing)
+        if class_weights is not None:
+            self.register_buffer("weight", torch.tensor(class_weights, dtype=torch.float32))
+        else:
+            self.weight = None
+        self.label_smoothing = label_smoothing
 
     def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
-        return self.ce(logits, targets)
+        return F.cross_entropy(logits, targets, weight=self.weight, label_smoothing=self.label_smoothing)
 
 
 class FocalLoss(nn.Module):
