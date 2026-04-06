@@ -18,7 +18,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.cuda.amp import GradScaler, autocast
+from torch.amp import GradScaler, autocast
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -65,7 +65,7 @@ class Trainer:
         self.use_amp = hw_cfg.get("mixed_precision", False) and torch.cuda.is_available()
         precision = hw_cfg.get("precision", "fp32")
         self.amp_dtype = torch.bfloat16 if precision == "bf16" else torch.float16
-        self.scaler = GradScaler(enabled=self.use_amp and self.amp_dtype == torch.float16)
+        self.scaler = GradScaler("cuda", enabled=self.use_amp and self.amp_dtype == torch.float16)
 
         # Monitoring
         tb_cfg = config.get("monitoring", Config({"tensorboard": Config({"enabled": False})}))
@@ -273,7 +273,7 @@ class Trainer:
 
             optimizer.zero_grad()
 
-            with autocast(device_type="cuda", dtype=self.amp_dtype, enabled=self.use_amp):
+            with autocast("cuda", dtype=self.amp_dtype, enabled=self.use_amp):
                 if use_mixup and mixup_alpha > 0:
                     images, labels_a, labels_b, lam = mixup_data(images, labels, mixup_alpha)
                     output = self.model(images)
@@ -319,7 +319,7 @@ class Trainer:
             images = images.to(self.device)
             labels = labels.to(self.device)
 
-            with autocast(device_type="cuda", dtype=self.amp_dtype, enabled=self.use_amp):
+            with autocast("cuda", dtype=self.amp_dtype, enabled=self.use_amp):
                 output = self.model(images)
                 if isinstance(output, dict):
                     output = output["logits"]
