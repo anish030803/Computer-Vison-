@@ -123,14 +123,15 @@ class CrossValidationTrainer:
                 "log_every_n_steps": 50,
             }
 
-            # Train
+            # Train — pass class_weights=None to avoid double-weighting
+            # (WeightedRandomSampler already balances batches; loss should be unweighted)
             trainer = Trainer(
                 model=model,
                 config=fold_config,
                 train_loader=train_loader,
                 val_loader=val_loader,
                 device=self.device,
-                class_weights=self.class_weights,
+                class_weights=None,
             )
             history = trainer.train()
 

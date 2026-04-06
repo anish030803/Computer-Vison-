@@ -77,6 +77,28 @@ def get_train_transforms(
             )
         )
 
+    # CLAHE — enhances local contrast, makes lesions more visible
+    if aug_cfg.get("clahe", False):
+        transforms.append(A.CLAHE(clip_limit=2.0, tile_grid_size=(8, 8), p=0.3))
+
+    # CoarseDropout (CutOut) — forces spatial robustness
+    if aug_cfg.get("coarse_dropout", False):
+        hole_size = max(1, int(image_size * 0.1))
+        transforms.append(
+            A.CoarseDropout(
+                max_holes=8,
+                max_height=hole_size,
+                max_width=hole_size,
+                min_holes=1,
+                fill_value=0,
+                p=0.3,
+            )
+        )
+
+    # GridDistortion — simulates camera positioning variation
+    if aug_cfg.get("grid_distortion", False):
+        transforms.append(A.GridDistortion(num_steps=5, distort_limit=0.1, p=0.3))
+
     # Normalize
     normalize_cfg = aug_cfg.get("normalize")
     if normalize_cfg is not None:

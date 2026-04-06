@@ -39,39 +39,38 @@ training:
       class_weights: null              # Computed from cleaned data
     batch_size: 64
 
-  # Phase 2: Fine-tuning — top 30% backbone unfrozen
+  # Phase 2: Fine-tuning — top 50% backbone unfrozen
   phase2:
-    description: "Fine-tuning — top 30% backbone unfrozen"
+    description: "Fine-tuning — top 50% backbone unfrozen"
     freeze_backbone: false
-    unfreeze_ratio: 0.3
-    epochs: 15
+    unfreeze_ratio: 0.5
+    epochs: 25
     optimizer:
       name: "adamw"
-      lr: 1.0e-5
-      weight_decay: 1.0e-4
+      lr: 3.0e-5
+      weight_decay: 1.0e-3
       betas: [0.9, 0.999]
     scheduler:
-      name: "cosine_annealing_warm_restarts"
-      T_0: 5
-      T_mult: 2
+      name: "cosine_with_warmup"
+      warmup_epochs: 3
       min_lr: 1.0e-7
     loss:
-      name: "cross_entropy"
-      label_smoothing: 0.1
+      name: "focal_loss"
+      label_smoothing: 0.05
       class_weights: null
-      focal_loss_gamma: null           # Set if switching to focal loss
+      focal_loss_gamma: 2.0
     batch_size: 64
     gradient_clipping:
       max_norm: 1.0
     mixup:
       enabled: true
-      alpha: 0.2
+      alpha: 0.4
 
 # --- Overfitting Prevention (TRD §5) ---
 regularization:
   early_stopping:
     monitor: "val_qwk"
-    patience: 5
+    patience: 7
     mode: "max"
   reduce_lr_on_plateau:
     monitor: "val_qwk"
@@ -88,6 +87,9 @@ augmentation:
     zoom_range: [0.9, 1.1]
     brightness_limit: 0.1
     contrast_limit: 0.1
+    clahe: true
+    coarse_dropout: true
+    grid_distortion: true
     normalize:
       mean: [0.485, 0.456, 0.406]     # ImageNet
       std: [0.229, 0.224, 0.225]
