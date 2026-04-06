@@ -107,7 +107,7 @@ hardware:
 # --- Monitoring ---
 monitoring:
   tensorboard:
-    enabled: true
+    enabled: false
     log_dir: "logs/tensorboard/dinov2_vit_l"
   wandb:
     enabled: false
@@ -118,7 +118,7 @@ monitoring:
 # --- Checkpointing ---
 checkpointing:
   save_dir: "checkpoints/dinov2_vit_l"
-  save_every_epoch: true
+  save_every_epoch: false
   save_best_only: false
   monitor: "val_qwk"
   mode: "max"

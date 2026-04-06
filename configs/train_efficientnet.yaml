@@ -108,7 +108,7 @@ hardware:
 # --- Monitoring ---
 monitoring:
   tensorboard:
-    enabled: true
+    enabled: false
     log_dir: "logs/tensorboard/efficientnet_b4"
   wandb:
     enabled: false
@@ -119,7 +119,7 @@ monitoring:
 # --- Checkpointing ---
 checkpointing:
   save_dir: "checkpoints/efficientnet_b4"
-  save_every_epoch: true
+  save_every_epoch: false
   save_best_only: false
   monitor: "val_qwk"
   mode: "max"
