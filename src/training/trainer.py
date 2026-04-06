@@ -127,7 +127,7 @@ class Trainer:
         # Build optimizer, scheduler, loss for Phase 1
         optimizer = self._build_optimizer(phase1_cfg)
         scheduler = build_scheduler(phase1_cfg.scheduler, optimizer, phase1_cfg.epochs)
-        criterion = build_loss(phase1_cfg.loss, self.class_weights)
+        criterion = build_loss(phase1_cfg.loss, self.class_weights).to(self.device)
 
         phase1_history = self._train_phase(
             phase_name="phase1",
@@ -163,7 +163,7 @@ class Trainer:
         # Build new optimizer (different LR), scheduler, loss for Phase 2
         optimizer = self._build_optimizer(phase2_cfg)
         scheduler = build_scheduler(phase2_cfg.scheduler, optimizer, phase2_cfg.epochs)
-        criterion = build_loss(phase2_cfg.loss, self.class_weights)
+        criterion = build_loss(phase2_cfg.loss, self.class_weights).to(self.device)
 
         # MixUp and gradient clipping config
         mixup_cfg = phase2_cfg.get("mixup", Config({"enabled": False}))
