@@ -156,9 +156,9 @@ class Trainer:
         else:
             self.model.unfreeze_backbone()
 
-        # Reset early stopping and checkpointer for Phase 2
+        # Reset early stopping for Phase 2 but KEEP checkpointer's best value
+        # so Phase 2 only overwrites best.pt if it actually improves on Phase 1
         self.early_stopping.reset()
-        self.checkpointer.reset()
 
         # Build new optimizer (different LR), scheduler, loss for Phase 2
         optimizer = self._build_optimizer(phase2_cfg)
