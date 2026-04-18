@@ -69,10 +69,10 @@ cleaning:
 
   quality_assessment:
     enabled: true
-    min_sharpness: 5.0           # Laplacian variance — fundus images are naturally soft
-    min_brightness: 5            # Mean pixel value — fundus images have dark backgrounds
-    max_brightness: 245
-    min_contrast: 5              # Std deviation — low threshold for dark-background images
+    min_sharpness: 3.0           # 2nd percentile from raw analysis (range 2.8-81.1)
+    min_brightness: 20           # 2nd percentile ~29, set lower to be safe
+    max_brightness: 130          # 98th percentile ~96, set higher to be safe
+    min_contrast: 15             # 2nd percentile ~20.6, set lower to be safe
 
   resolution:
     min_width: 256
