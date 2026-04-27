@@ -2,6 +2,11 @@
 
 Deep learning system for classifying retinal fundus images into 5 DR severity grades. Trained on APTOS 2019 dataset (2,681 cleaned images) using EfficientNet-B4 and ResNet-50. Includes a training pipeline (HPC/SLURM), FastAPI inference server, and Next.js web frontend.
 
+**Links:**
+- 📊 Dataset: [APTOS 2019 on Kaggle](https://www.kaggle.com/datasets/mariaherrerot/aptos2019)
+- 🤗 Models: [EfficientNet-B4](https://huggingface.co/anishanish383/dr-detection-efficientnet-b4) · [ResNet-50](https://huggingface.co/anishanish383/dr-detection-resnet50)
+- 📁 Source code: [GitHub](https://github.com/anish030803/Computer-Vison-)
+
 ## Results
 
 **5-Fold Cross-Validation on EfficientNet-B4:**
@@ -181,7 +186,12 @@ All models use two-phase training: head warmup (frozen backbone) then fine-tunin
 
 ## Dataset
 
-**APTOS 2019 Blindness Detection** (Kaggle)
+**APTOS 2019 Blindness Detection** — [Kaggle dataset](https://www.kaggle.com/datasets/mariaherrerot/aptos2019)
+
+Download via:
+```bash
+kaggle datasets download -d mariaherrerot/aptos2019 -p data/raw/aptos2019/
+```
 
 - Original: 3,662 training images
 - After cleaning: **2,681 images**

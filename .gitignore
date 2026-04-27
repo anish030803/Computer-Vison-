@@ -52,3 +52,8 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+test_image.png
+test_grade*.png
+cleaning_report.json
+hf_model_card_*.md
+.vscode/
