@@ -23,7 +23,12 @@ class ModelManager:
         self.model: Optional[torch.nn.Module] = None
         self.config: Optional[Config] = None
         self.model_name: Optional[str] = None
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        if torch.cuda.is_available():
+            self.device = "cuda"
+        elif torch.backends.mps.is_available():
+            self.device = "mps"
+        else:
+            self.device = "cpu"
 
     def load(
         self,
